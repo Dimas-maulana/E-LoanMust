@@ -1,0 +1,61 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { 
+  Plafond, 
+  PlafondRequest, 
+  ApiResponse, 
+  PageResponse 
+} from '../../core/models';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PlafondService {
+  private readonly apiUrl = `${environment.apiUrl}/plafonds`;
+
+  constructor(private http: HttpClient) {}
+
+  // Get all plafonds (public - for landing page)
+  getAll(): Observable<ApiResponse<Plafond[]>> {
+    return this.http.get<ApiResponse<Plafond[]>>(this.apiUrl);
+  }
+
+  // Get active plafonds only (for landing page)
+  getActive(): Observable<ApiResponse<Plafond[]>> {
+    return this.http.get<ApiResponse<Plafond[]>>(`${this.apiUrl}/active`);
+  }
+
+  // Get plafond by ID
+  getById(id: number): Observable<ApiResponse<Plafond>> {
+    return this.http.get<ApiResponse<Plafond>>(`${this.apiUrl}/${id}`);
+  }
+
+  // Get paginated plafonds (admin)
+  getPaginated(page: number = 0, size: number = 10, sort: string = 'name'): Observable<ApiResponse<PageResponse<Plafond>>> {
+    return this.http.get<ApiResponse<PageResponse<Plafond>>>(`${this.apiUrl}/paginated`, {
+      params: { page: page.toString(), size: size.toString(), sort }
+    });
+  }
+
+  // Create plafond (SUPER_ADMIN only)
+  create(request: PlafondRequest): Observable<ApiResponse<Plafond>> {
+    return this.http.post<ApiResponse<Plafond>>(this.apiUrl, request);
+  }
+
+  // Update plafond (SUPER_ADMIN only)
+  update(id: number, request: PlafondRequest): Observable<ApiResponse<Plafond>> {
+    return this.http.put<ApiResponse<Plafond>>(`${this.apiUrl}/${id}`, request);
+  }
+
+  // Toggle plafond active status (SUPER_ADMIN only)
+  toggleActive(id: number): Observable<ApiResponse<Plafond>> {
+    return this.http.patch<ApiResponse<Plafond>>(`${this.apiUrl}/${id}/toggle-active`, {});
+  }
+
+  // Delete plafond (SUPER_ADMIN only)
+  delete(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  }
+}
