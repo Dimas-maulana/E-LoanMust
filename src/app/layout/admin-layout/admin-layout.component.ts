@@ -151,8 +151,9 @@ interface MenuItem {
                   </svg>
                 </button>
 
+
                 @if (userMenuOpen()) {
-                  <div class="absolute right-0 mt-2 w-48 glass-card p-2">
+                  <div class="absolute right-0 mt-2 w-48 glass-card p-2 z-50">
                     <a 
                       routerLink="/admin/profile" 
                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all"

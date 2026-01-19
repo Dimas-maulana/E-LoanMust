@@ -283,24 +283,43 @@ export class ReviewListComponent implements OnInit {
   loadLoans(): void {
     this.isLoading.set(true);
     
-    const status = this.statusFilter as LoanStatus || undefined;
-    
-    this.loanService.getLoans(this.currentPage(), this.pageSize, status, this.searchQuery).subscribe({
+    // Use /api/reviews/pending endpoint for Marketing review list
+    this.loanService.getPendingReviewLoans().subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          // Filter to only show SUBMITTED and IN_REVIEW for marketing
-          const filtered = response.data.content.filter(
-            loan => loan.status === LoanStatus.SUBMITTED || loan.status === LoanStatus.IN_REVIEW
-          );
-          this.loans.set(filtered);
-          this.totalPages.set(response.data.totalPages);
-          this.totalItems.set(response.data.totalElements);
+          // Backend returns array, handle pagination on frontend
+          let allLoans = response.data;
+          
+          // Apply search filter if any
+          if (this.searchQuery) {
+            const query = this.searchQuery.toLowerCase();
+            allLoans = allLoans.filter(loan =>
+              loan.applicationNumber.toLowerCase().includes(query) ||
+              loan.customer.fullName.toLowerCase().includes(query) ||
+              loan.customer.email.toLowerCase().includes(query)
+            );
+          }
+          
+          // Apply status filter if any
+          if (this.statusFilter) {
+            allLoans = allLoans.filter(loan => loan.status === this.statusFilter);
+          }
+          
+          // Frontend pagination
+          const totalLoans = allLoans.length;
+          const startIndex = this.currentPage() * this.pageSize;
+          const endIndex = startIndex + this.pageSize;
+          const paginatedLoans = allLoans.slice(startIndex, endIndex);
+          
+          this.loans.set(paginatedLoans);
+          this.totalItems.set(totalLoans);
+          this.totalPages.set(Math.ceil(totalLoans / this.pageSize));
         }
         this.isLoading.set(false);
       },
-      error: () => {
-        // Dummy data
-        this.loans.set(this.getDummyLoans());
+      error: (err) => {
+        console.error('Error loading pending reviews:', err);
+        this.loans.set([]);
         this.isLoading.set(false);
       }
     });

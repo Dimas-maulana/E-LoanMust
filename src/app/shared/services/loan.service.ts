@@ -132,6 +132,11 @@ export class LoanService {
     return this.getLoansByStatus(LoanStatus.SUBMITTED, page, size);
   }
 
+  // Get pending review loans from /api/reviews/pending (MARKETING)
+  getPendingReviewLoans(): Observable<ApiResponse<LoanApplication[]>> {
+    return this.http.get<ApiResponse<LoanApplication[]>>(`${environment.apiUrl}/reviews/pending`);
+  }
+
   // Get loans for approval (BRANCH_MANAGER) - status = IN_REVIEW or REVIEWED
   getLoansForApproval(page: number = 0, size: number = 10): Observable<ApiResponse<PageResponse<LoanApplication>>> {
     return this.http.get<ApiResponse<PageResponse<LoanApplication>>>(`${this.apiUrl}/pending-approval`, {

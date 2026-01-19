@@ -41,7 +41,7 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
               <span class="font-bold text-white">Smart Transaction</span>
             </p>
             <p class="text-base text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0">
-              Platform pinjaman digital legal dan aman yang dioptimalkan untuk pengguna mobile 📱. 
+              Platform pinjaman digital legal dan aman yang dioptimalkan untuk pengguna mobile. 
               Nikmati pengalaman transaksi cerdas dengan proses otomatis yang cepat dan modern. 
               Dapatkan persetujuan dalam hitungan menit!
             </p>
