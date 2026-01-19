@@ -311,7 +311,7 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
                   {{ product.name }}
                 </h3>
 
-                <p class="text-gray-400 text-center text-sm mb-6">{{ product.description }}</p>
+                <p class="text-gray-400 text-center text-sm mb-6">{{ product.description || 'Produk pinjaman yang fleksibel' }}</p>
 
                 <!-- Details -->
                 <div class="space-y-4">
@@ -553,12 +553,15 @@ export class LandingComponent implements OnInit {
 
   loadProducts(): void {
     this.isLoading.set(true);
+    // Backend /api/plafonds already returns only active products
     this.plafondService.getAll().subscribe({
       next: (response) => {
+        console.log('Plafonds API Response:', response);
         if (response.success && response.data) {
-          // Filter only active products
-          const activeProducts = response.data.filter(p => p.active);
-          this.products.set(activeProducts);
+          console.log('Products from API:', response.data);
+          console.log('Products count:', response.data.length);
+          // No need to filter - backend already returns active only
+          this.products.set(response.data);
         }
         this.isLoading.set(false);
       },

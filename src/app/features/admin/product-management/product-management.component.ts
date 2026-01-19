@@ -367,7 +367,8 @@ export class ProductManagementComponent implements OnInit {
 
   loadProducts(): void {
     this.isLoading.set(true);
-    this.plafondService.getAll().subscribe({
+    // Admin needs to see ALL products including inactive
+    this.plafondService.getAllIncludingInactive().subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.products.set(response.data);

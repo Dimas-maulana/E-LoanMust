@@ -23,9 +23,38 @@ export class LoanService {
 
   constructor(private http: HttpClient) {}
 
-  // Get loan statistics for dashboard
+  // Get loan statistics for dashboard (calculated from all loans)
   getStatistics(): Observable<ApiResponse<LoanStatistics>> {
-    return this.http.get<ApiResponse<LoanStatistics>>(`${this.apiUrl}/statistics`);
+    // Backend doesn't have /statistics endpoint, so we get all loans and calculate
+    return new Observable(observer => {
+      this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/all`).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            const loans = response.data;
+            const stats: LoanStatistics = {
+              totalApplications: loans.length,
+              pendingReview: loans.filter(l => l.status === 'SUBMITTED').length,
+              pendingApproval: loans.filter(l => l.status === 'IN_REVIEW' || l.status === 'REVIEWED').length,
+              approved: loans.filter(l => l.status === 'APPROVED').length,
+              rejected: loans.filter(l => l.status === 'REJECTED').length,
+              disbursed: loans.filter(l => l.status === 'DISBURSED').length,
+              totalDisbursedAmount: loans
+                .filter(l => l.status === 'DISBURSED')
+                .reduce((sum, l) => sum + (l.amount || 0), 0)
+            };
+            observer.next({
+              success: true,
+              message: 'Statistics calculated successfully',
+              data: stats
+            } as ApiResponse<LoanStatistics>);
+            observer.complete();
+          } else {
+            observer.error('No data');
+          }
+        },
+        error: (err) => observer.error(err)
+      });
+    });
   }
 
   // Simulate loan (public - for landing page)

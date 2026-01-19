@@ -118,6 +118,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/notification/notification-list.component').then(m => m.NotificationListComponent),
         title: 'Notifikasi - E-Loan Must Admin'
       },
+
+      // Profile
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
+        title: 'Profile - E-Loan Must Admin'
+      },
       
       {
         path: '',

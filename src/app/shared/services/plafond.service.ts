@@ -23,9 +23,14 @@ export class PlafondService {
     return this.http.get<ApiResponse<Plafond[]>>(this.apiUrl);
   }
 
-  // Get active plafonds only (for landing page)
+  // Get active plafonds only (for landing page) - DEPRECATED, use getAll()
   getActive(): Observable<ApiResponse<Plafond[]>> {
     return this.http.get<ApiResponse<Plafond[]>>(`${this.apiUrl}/active`);
+  }
+
+  // Get all plafonds including inactive (for admin product management)
+  getAllIncludingInactive(): Observable<ApiResponse<Plafond[]>> {
+    return this.http.get<ApiResponse<Plafond[]>>(`${this.apiUrl}/all`);
   }
 
   // Get plafond by ID

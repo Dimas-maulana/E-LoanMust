@@ -153,7 +153,11 @@ interface MenuItem {
 
                 @if (userMenuOpen()) {
                   <div class="absolute right-0 mt-2 w-48 glass-card p-2">
-                    <a routerLink="/admin/profile" class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all">
+                    <a 
+                      routerLink="/admin/profile" 
+                      class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all"
+                      (click)="userMenuOpen.set(false)"
+                    >
                       <span>👤</span>
                       <span>Profil</span>
                     </a>
