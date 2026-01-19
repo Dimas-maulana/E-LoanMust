@@ -1,14 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { PlafondService } from '../../shared/services';
-import { Plafond } from '../../core/models';
+import { PlafondService, LoanService } from '../../shared/services';
+import { Plafond, LoanSimulationResponse, ProductDetectionResponse } from '../../core/models';
 import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, CurrencyPipe, PercentagePipe],
+  imports: [CommonModule, FormsModule, RouterLink, CurrencyPipe, PercentagePipe],
   template: `
     <!-- Hero Section -->
     <section class="relative min-h-screen flex items-center overflow-hidden">
@@ -97,6 +98,155 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
         </a>
+      </div>
+    </section>
+
+    <!-- Loan Simulation Section -->
+    <section id="simulation" class="py-20 relative">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/10 to-transparent"></div>
+      <div class="container mx-auto px-6 relative">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
+            <span class="gradient-text-blue">Simulasi</span> Pinjaman
+          </h2>
+          <p class="text-gray-400 max-w-2xl mx-auto">
+            Hitung estimasi cicilan pinjaman Anda secara real-time
+          </p>
+        </div>
+
+        <div class="max-w-4xl mx-auto">
+          <div class="glass-card p-8">
+            <!-- Result Header -->
+            @if (simulationResult()) {
+              <div class="bg-gradient-to-r from-blue-600/20 to-amber-500/20 rounded-2xl p-6 mb-8 text-center">
+                <p class="text-gray-300 text-sm mb-2">Perkiraan cicilan kamu</p>
+                <h3 class="text-4xl font-bold text-white mb-1">
+                  {{ simulationResult()!.monthlyInstallment | currency }}
+                  <span class="text-xl text-gray-400">/bulan</span>
+                </h3>
+                <p class="text-gray-400 text-sm">
+                  Produk: <span class="text-amber-400 font-semibold">{{ simulationResult()!.plafondName }}</span>
+                  • Tenor: {{ simulationResult()!.tenorMonth }} bulan
+                </p>
+              </div>
+            }
+
+            <!-- Amount Input -->
+            <div class="mb-8">
+              <label class="block text-white font-semibold mb-3">
+                Jumlah Pinjaman
+              </label>
+              <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">Rp</span>
+                <input
+                  type="number"
+                  [(ngModel)]="loanAmount"
+                  (ngModelChange)="onAmountChange()"
+                  class="glass-input pl-12 text-2xl font-bold text-white"
+                  placeholder="0"
+                  min="0"
+                  step="100000"
+                />
+              </div>
+              <input
+                type="range"
+                [(ngModel)]="loanAmount"
+                (ngModelChange)="onAmountChange()"
+                [min]="minAmount"
+                [max]="maxAmount"
+                step="100000"
+                class="w-full mt-4 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer
+                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+                       [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r
+                       [&::-webkit-slider-thumb]:from-blue-500 [&::-webkit-slider-thumb]:to-blue-600
+                       [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg
+                       [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6
+                       [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-gradient-to-r
+                       [&::-moz-range-thumb]:from-blue-500 [&::-moz-range-thumb]:to-blue-600
+                       [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
+              />
+              <div class="flex justify-between text-xs text-gray-400 mt-2">
+                <span>{{ minAmount | currency }}</span>
+                <span>{{ maxAmount | currency }}</span>
+              </div>
+              
+              @if (detectedProduct() && detectedProduct()!.found) {
+                <div class="mt-3 flex items-center gap-2 text-sm text-emerald-400">
+                  <span>✓</span>
+                  <span>{{ detectedProduct()!.message }}</span>
+                </div>
+              } @else if (detectedProduct() && !detectedProduct()!.found) {
+                <div class="mt-3 flex items-center gap-2 text-sm text-red-400">
+                  <span>⚠</span>
+                  <span>{{ detectedProduct()!.message }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Tenor Selection -->
+            <div class="mb-8">
+              <label class="block text-white font-semibold mb-3">
+                Tenor (Bulan)
+              </label>
+              <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2">
+                @for (tenor of availableTenors; track tenor) {
+                  <button
+                    type="button"
+                    (click)="selectTenor(tenor)"
+                    [disabled]="!isTenorAvailable(tenor)"
+                    [class.opacity-30]="!isTenorAvailable(tenor)"
+                    [class.cursor-not-allowed]="!isTenorAvailable(tenor)"
+                    class="py-3 px-2 rounded-lg font-semibold transition-all text-sm"
+                    [ngClass]="{
+                      'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg': selectedTenor === tenor && isTenorAvailable(tenor),
+                      'bg-white/10 text-gray-300 hover:bg-white/20': selectedTenor !== tenor && isTenorAvailable(tenor)
+                    }"
+                  >
+                    {{ tenor }}
+                  </button>
+                }
+              </div>
+              @if (maxTenorAllowed > 0) {
+                <p class="text-xs text-gray-400 mt-2">
+                  Maksimal tenor untuk produk ini: {{ maxTenorAllowed }} bulan
+                </p>
+              }
+            </div>
+
+            <!-- Simulation Results -->
+            @if (simulationResult()) {
+              <div class="space-y-4 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div class="bg-white/5 rounded-xl p-4">
+                    <p class="text-gray-400 text-sm mb-1">Bunga Per Tahun</p>
+                    <p class="text-2xl font-bold text-white">{{ simulationResult()!.actualInterestRate }}%</p>
+                  </div>
+                  <div class="bg-white/5 rounded-xl p-4">
+                    <p class="text-gray-400 text-sm mb-1">Total Bunga</p>
+                    <p class="text-2xl font-bold text-white">{{ simulationResult()!.totalInterest | currency }}</p>
+                  </div>
+                </div>
+                <div class="bg-gradient-to-r from-emerald-600/20 to-emerald-500/20 rounded-xl p-4">
+                  <p class="text-gray-300 text-sm mb-1">Total Pembayaran</p>
+                  <p class="text-3xl font-bold text-white">{{ simulationResult()!.totalPayment | currency }}</p>
+                </div>
+              </div>
+            }
+
+            <!-- CTA Button -->
+            <button
+              class="btn-gold w-full mt-8 py-4 text-lg"
+              (click)="showDownloadModal = true"
+              [disabled]="!simulationResult()"
+            >
+              Ajukan Pinjaman Ini
+            </button>
+
+            <p class="text-xs text-gray-400 text-center mt-4">
+              * Simulasi ini hanya estimasi. Nilai aktual mungkin berbeda setelah verifikasi.
+            </p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -357,10 +507,22 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
 })
 export class LandingComponent implements OnInit {
   private plafondService = inject(PlafondService);
+  private loanService = inject(LoanService);
 
   products = signal<Plafond[]>([]);
   isLoading = signal(true);
   showDownloadModal = false;
+
+  // Simulation properties
+  loanAmount = 10000000;
+  selectedTenor = 6;
+  minAmount = 1000000;
+  maxAmount = 500000000;
+  availableTenors = [1, 3, 6, 9, 12, 18, 24, 30, 36, 42, 48, 54, 60];
+  maxTenorAllowed = 0;
+  
+  detectedProduct = signal<ProductDetectionResponse | null>(null);
+  simulationResult = signal<LoanSimulationResponse | null>(null);
 
   steps = [
     {
@@ -449,5 +611,74 @@ export class LandingComponent implements OnInit {
     if (upperName.includes('GOLD')) return 'GOLD';
     if (upperName.includes('SILVER')) return 'SILVER';
     return 'SILVER';
+  }
+
+  // Simulation methods
+  onAmountChange(): void {
+    if (this.loanAmount >= this.minAmount) {
+      this.detectProduct();
+    } else {
+      this.detectedProduct.set(null);
+      this.simulationResult.set(null);
+    }
+  }
+
+  detectProduct(): void {
+    this.plafondService.detectByAmount(this.loanAmount).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.detectedProduct.set(response.data);
+          if (response.data.found && response.data.maxTenorMonth) {
+            this.maxTenorAllowed = response.data.maxTenorMonth;
+            // Auto-adjust tenor if current selection exceeds max
+            if (this.selectedTenor > this.maxTenorAllowed) {
+              this.selectedTenor = this.maxTenorAllowed;
+            }
+            this.runSimulation();
+          } else {
+            this.simulationResult.set(null);
+          }
+        }
+      },
+      error: () => {
+        this.detectedProduct.set({
+          found: false,
+          message: 'Gagal mendeteksi produk. Silakan coba lagi.'
+        });
+        this.simulationResult.set(null);
+      }
+    });
+  }
+
+  selectTenor(tenor: number): void {
+    if (this.isTenorAvailable(tenor)) {
+      this.selectedTenor = tenor;
+      this.runSimulation();
+    }
+  }
+
+  isTenorAvailable(tenor: number): boolean {
+    if (this.maxTenorAllowed === 0) return false;
+    return tenor <= this.maxTenorAllowed;
+  }
+
+  runSimulation(): void {
+    if (!this.detectedProduct()?.found || !this.selectedTenor) {
+      return;
+    }
+
+    this.loanService.simulate({
+      amount: this.loanAmount,
+      tenorMonth: this.selectedTenor
+    }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.simulationResult.set(response.data);
+        }
+      },
+      error: () => {
+        // Keep existing simulation or clear if needed
+      }
+    });
   }
 }

@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { 
   Plafond, 
   PlafondRequest, 
   ApiResponse, 
-  PageResponse 
+  PageResponse,
+  ProductDetectionResponse 
 } from '../../core/models';
 
 @Injectable({
@@ -30,6 +31,12 @@ export class PlafondService {
   // Get plafond by ID
   getById(id: number): Observable<ApiResponse<Plafond>> {
     return this.http.get<ApiResponse<Plafond>>(`${this.apiUrl}/${id}`);
+  }
+
+  // Detect product by amount (for landing page simulation)
+  detectByAmount(amount: number): Observable<ApiResponse<ProductDetectionResponse>> {
+    const params = new HttpParams().set('amount', amount.toString());
+    return this.http.get<ApiResponse<ProductDetectionResponse>>(`${this.apiUrl}/detect`, { params });
   }
 
   // Get paginated plafonds (admin)

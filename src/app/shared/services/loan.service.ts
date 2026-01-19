@@ -10,7 +10,9 @@ import {
   ApprovalLoanRequest,
   DisbursementRequest,
   ApiResponse,
-  PageResponse
+  PageResponse,
+  LoanSimulationRequest,
+  LoanSimulationResponse
 } from '../../core/models';
 
 @Injectable({
@@ -24,6 +26,11 @@ export class LoanService {
   // Get loan statistics for dashboard
   getStatistics(): Observable<ApiResponse<LoanStatistics>> {
     return this.http.get<ApiResponse<LoanStatistics>>(`${this.apiUrl}/statistics`);
+  }
+
+  // Simulate loan (public - for landing page)
+  simulate(request: LoanSimulationRequest): Observable<ApiResponse<LoanSimulationResponse>> {
+    return this.http.post<ApiResponse<LoanSimulationResponse>>(`${this.apiUrl}/simulate`, request);
   }
 
   // Get all loans with optional filters

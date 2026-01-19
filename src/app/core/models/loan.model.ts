@@ -98,3 +98,37 @@ export interface LoanStatistics {
   disbursed: number;
   totalDisbursedAmount: number;
 }
+
+// Loan simulation request (public)
+export interface LoanSimulationRequest {
+  amount: number;
+  tenorMonth: number;
+}
+
+// Loan simulation response (public)
+export interface LoanSimulationResponse {
+  plafondId: number;
+  plafondName: string;
+  amount: number;
+  tenorMonth: number;
+  maxTenorMonth: number;
+  baseInterestRate: number;
+  actualInterestRate: number;
+  totalInterest: number;
+  totalPayment: number;
+  monthlyInstallment: number;
+  message: string;
+}
+
+// Product detection response (public)
+export interface ProductDetectionResponse {
+  found: boolean;
+  plafondId?: number;
+  plafondName?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  baseInterestRate?: number;
+  maxTenorMonth?: number;
+  availableTenors?: number[];
+  message: string;
+}
