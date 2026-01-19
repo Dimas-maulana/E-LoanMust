@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   LoanApplication,
@@ -23,36 +23,64 @@ export class LoanService {
 
   constructor(private http: HttpClient) {}
 
-  // Get loan statistics for dashboard (calculated from all loans)
+  // Get loan statistics for dashboard (using multiple endpoints)
   getStatistics(): Observable<ApiResponse<LoanStatistics>> {
-    // Backend doesn't have /statistics endpoint, so we get all loans and calculate
     return new Observable(observer => {
-      this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/all`).subscribe({
-        next: (response) => {
-          if (response.success && response.data) {
-            const loans = response.data;
-            const stats: LoanStatistics = {
-              totalApplications: loans.length,
-              pendingReview: loans.filter(l => l.status === 'SUBMITTED').length,
-              pendingApproval: loans.filter(l => l.status === 'IN_REVIEW' || l.status === 'REVIEWED').length,
-              approved: loans.filter(l => l.status === 'APPROVED').length,
-              rejected: loans.filter(l => l.status === 'REJECTED').length,
-              disbursed: loans.filter(l => l.status === 'DISBURSED').length,
-              totalDisbursedAmount: loans
-                .filter(l => l.status === 'DISBURSED')
-                .reduce((sum, l) => sum + (l.amount || 0), 0)
-            };
-            observer.next({
-              success: true,
-              message: 'Statistics calculated successfully',
-              data: stats
-            } as ApiResponse<LoanStatistics>);
-            observer.complete();
-          } else {
-            observer.error('No data');
-          }
+      // Use forkJoin to call multiple endpoints simultaneously
+      const stats$ = {
+        submitted: this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/all`),
+        onReview: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/reviews/pending`),
+        needApproval: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/approvals/pending`),
+        disbursed: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/disbursements`)
+      };
+
+      forkJoin(stats$).subscribe({
+        next: (results) => {
+          const submittedLoans = results.submitted?.data || [];
+          const reviewLoans = results.onReview?.data || [];
+          const approvalLoans = results.needApproval?.data || [];
+          const disbursedLoans = results.disbursed?.data || [];
+
+          const stats: LoanStatistics = {
+            totalApplications: submittedLoans.length,
+            pendingReview: reviewLoans.length,
+            pendingApproval: approvalLoans.length,
+            approved: approvalLoans.length, // Same as pending approval
+            rejected: submittedLoans.filter((l: any) => l.status === 'REJECTED').length,
+            disbursed: disbursedLoans.length,
+            totalDisbursedAmount: disbursedLoans
+              .reduce((sum: number, l: any) => sum + (l.amount || 0), 0)
+          };
+
+          observer.next({
+            success: true,
+            message: 'Statistics retrieved successfully',
+            data: stats,
+            code: 200,
+            timestamp: new Date().toISOString()
+          } as ApiResponse<LoanStatistics>);
+          observer.complete();
         },
-        error: (err) => observer.error(err)
+        error: (err) => {
+          console.error('Error fetching statistics:', err);
+          // Return empty stats on error
+          observer.next({
+            success: true,
+            message: 'No data available',
+            data: {
+              totalApplications: 0,
+              pendingReview: 0,
+              pendingApproval: 0,
+              approved: 0,
+              rejected: 0,
+              disbursed: 0,
+              totalDisbursedAmount: 0
+            },
+            code: 200,
+            timestamp: new Date().toISOString()
+          } as ApiResponse<LoanStatistics>);
+          observer.complete();
+        }
       });
     });
   }

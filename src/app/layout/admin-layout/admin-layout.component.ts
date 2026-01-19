@@ -269,7 +269,11 @@ export class AdminLayoutComponent implements OnInit {
   userName = computed(() => {
     const user = this.authService.currentUser();
     if (user) {
-      return `${user.firstName} ${user.lastName}`;
+      const firstName = user.firstName || '';
+      const lastName = user.lastName || '';
+      if (firstName || lastName) {
+        return `${firstName} ${lastName}`.trim();
+      }
     }
     return this.tokenService.getUsername() || 'Admin';
   });
