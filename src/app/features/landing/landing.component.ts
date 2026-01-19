@@ -69,45 +69,24 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
           </div>
 
           <!-- Illustration -->
-          <div class="hidden lg:flex justify-center relative">
-            <div class="relative">
-              <!-- Floating Cards -->
-              <div class="glass-card p-6 w-64 animate-float" style="animation-delay: 0s;">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-2xl">
-                    💰
-                  </div>
-                  <div>
-                    <p class="text-white font-semibold">Pinjaman Cair</p>
-                    <p class="text-gray-400 text-sm">Rp 50.000.000</p>
-                  </div>
-                </div>
-                <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <div class="h-full bg-gradient-to-r from-amber-400 to-amber-600 w-3/4 rounded-full"></div>
-                </div>
-              </div>
+<div class="hidden lg:flex justify-center relative">
+  <div class="relative animate-float" style="animation-delay: 1s;">
 
-              <div class="glass-card p-6 w-56 absolute -bottom-8 -left-20 animate-float" style="animation-delay: 1s;">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-gray-400 text-sm">Status</span>
-                  <span class="badge badge-green">Disetujui</span>
-                </div>
-                <p class="text-white font-semibold">Pengajuan #2024001</p>
-              </div>
+    <!-- Glow / Glass Backdrop -->
+    <div class="absolute inset-0 rounded-full blur-3xl 
+                bg-gradient-to-br from-blue-500/20 to-yellow-400/20">
+    </div>
 
-              <div class="glass-card p-4 absolute -top-8 -right-8 animate-float" style="animation-delay: 2s;">
-                <div class="flex items-center gap-2">
-                  <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                    ✓
-                  </div>
-                  <div>
-                    <p class="text-white text-sm font-medium">Proses Cepat</p>
-                    <p class="text-gray-400 text-xs">24 Jam</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    <!-- Main Illustration Image -->
+    <img
+      src="/images/imageprofile.png"
+      alt="Ilustrasi Pinjaman Digital"
+      class="relative w-[420px] xl:w-[480px] object-contain drop-shadow-2xl"
+    />
+
+  </div>
+</div>
+
         </div>
       </div>
 
@@ -374,7 +353,7 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
         </div>
       </div>
     }
-  `
+  `,
 })
 export class LandingComponent implements OnInit {
   private plafondService = inject(PlafondService);
@@ -387,23 +366,23 @@ export class LandingComponent implements OnInit {
     {
       number: 1,
       title: 'Download App',
-      description: 'Unduh aplikasi E-Loan Must dari Play Store atau App Store'
+      description: 'Unduh aplikasi E-Loan Must dari Play Store atau App Store',
     },
     {
       number: 2,
       title: 'Registrasi',
-      description: 'Daftar dan lengkapi data diri beserta dokumen yang diperlukan'
+      description: 'Daftar dan lengkapi data diri beserta dokumen yang diperlukan',
     },
     {
       number: 3,
       title: 'Ajukan Pinjaman',
-      description: 'Pilih produk dan jumlah pinjaman sesuai kebutuhan Anda'
+      description: 'Pilih produk dan jumlah pinjaman sesuai kebutuhan Anda',
     },
     {
       number: 4,
       title: 'Terima Dana',
-      description: 'Setelah disetujui, dana langsung cair ke rekening Anda'
-    }
+      description: 'Setelah disetujui, dana langsung cair ke rekening Anda',
+    },
   ];
 
   ngOnInit(): void {
@@ -432,7 +411,7 @@ export class LandingComponent implements OnInit {
             minTenor: 3,
             maxTenor: 12,
             interestRate: 12,
-            active: true
+            active: true,
           },
           {
             id: 2,
@@ -444,7 +423,7 @@ export class LandingComponent implements OnInit {
             minTenor: 6,
             maxTenor: 24,
             interestRate: 10,
-            active: true
+            active: true,
           },
           {
             id: 3,
@@ -456,11 +435,11 @@ export class LandingComponent implements OnInit {
             minTenor: 12,
             maxTenor: 36,
             interestRate: 8,
-            active: true
-          }
+            active: true,
+          },
         ]);
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
