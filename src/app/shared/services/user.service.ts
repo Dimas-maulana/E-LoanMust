@@ -22,21 +22,14 @@ export class UserService {
 
   // ==================== USER OPERATIONS ====================
 
-  // Get all users (paginated)
+  // Get all users (backend returns list, we handle pagination on frontend)
   getUsers(
     page: number = 0,
     size: number = 10,
     search?: string
-  ): Observable<ApiResponse<PageResponse<User>>> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
-
-    if (search) {
-      params = params.set('search', search);
-    }
-
-    return this.http.get<ApiResponse<PageResponse<User>>>(this.apiUrl, { params });
+  ): Observable<ApiResponse<User[]>> {
+    // Backend doesn't support pagination, so we get all and filter on frontend
+    return this.http.get<ApiResponse<User[]>>(this.apiUrl);
   }
 
   // Get user by ID

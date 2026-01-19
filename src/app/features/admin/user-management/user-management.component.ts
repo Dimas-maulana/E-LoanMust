@@ -340,14 +340,34 @@ export class UserManagementComponent implements OnInit {
     this.userService.getUsers(this.currentPage(), this.pageSize, this.searchQuery).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.users.set(response.data.content);
-          this.totalPages.set(response.data.totalPages);
-          this.totalItems.set(response.data.totalElements);
+          let allUsers = response.data;
+          
+          // Frontend search filter
+          if (this.searchQuery) {
+            const query = this.searchQuery.toLowerCase();
+            allUsers = allUsers.filter(user => 
+              user.firstName.toLowerCase().includes(query) ||
+              user.lastName.toLowerCase().includes(query) ||
+              user.email.toLowerCase().includes(query) ||
+              user.username.toLowerCase().includes(query)
+            );
+          }
+          
+          // Frontend pagination
+          const totalUsers = allUsers.length;
+          const startIndex = this.currentPage() * this.pageSize;
+          const endIndex = startIndex + this.pageSize;
+          const paginatedUsers = allUsers.slice(startIndex, endIndex);
+          
+          this.users.set(paginatedUsers);
+          this.totalItems.set(totalUsers);
+          this.totalPages.set(Math.ceil(totalUsers / this.pageSize));
         }
         this.isLoading.set(false);
       },
-      error: () => {
-        this.users.set(this.getDummyUsers());
+      error: (err) => {
+        console.error('Error loading users:', err);
+        this.users.set([]);
         this.isLoading.set(false);
       }
     });

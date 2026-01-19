@@ -553,53 +553,17 @@ export class LandingComponent implements OnInit {
 
   loadProducts(): void {
     this.isLoading.set(true);
-    this.plafondService.getActive().subscribe({
+    this.plafondService.getAll().subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.products.set(response.data);
+          // Filter only active products
+          const activeProducts = response.data.filter(p => p.active);
+          this.products.set(activeProducts);
         }
         this.isLoading.set(false);
       },
-      error: () => {
-        // Use dummy data if API fails
-        this.products.set([
-          {
-            id: 1,
-            name: 'Silver',
-            code: 'SILVER',
-            description: 'Pinjaman ringan untuk kebutuhan mendesak',
-            minAmount: 1000000,
-            maxAmount: 10000000,
-            minTenor: 3,
-            maxTenor: 12,
-            interestRate: 12,
-            active: true,
-          },
-          {
-            id: 2,
-            name: 'Gold',
-            code: 'GOLD',
-            description: 'Pinjaman fleksibel untuk berbagai kebutuhan',
-            minAmount: 10000000,
-            maxAmount: 50000000,
-            minTenor: 6,
-            maxTenor: 24,
-            interestRate: 10,
-            active: true,
-          },
-          {
-            id: 3,
-            name: 'Platinum',
-            code: 'PLATINUM',
-            description: 'Pinjaman premium dengan limit tinggi',
-            minAmount: 50000000,
-            maxAmount: 200000000,
-            minTenor: 12,
-            maxTenor: 36,
-            interestRate: 8,
-            active: true,
-          },
-        ]);
+      error: (err) => {
+        console.error('Error loading products:', err);
         this.isLoading.set(false);
       },
     });

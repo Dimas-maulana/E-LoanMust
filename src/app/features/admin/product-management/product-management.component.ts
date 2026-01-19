@@ -374,8 +374,9 @@ export class ProductManagementComponent implements OnInit {
         }
         this.isLoading.set(false);
       },
-      error: () => {
-        this.products.set(this.getDummyProducts());
+      error: (err) => {
+        console.error('Error loading products:', err);
+        this.products.set([]);
         this.isLoading.set(false);
       }
     });

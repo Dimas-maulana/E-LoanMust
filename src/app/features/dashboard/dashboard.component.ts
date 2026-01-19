@@ -243,16 +243,17 @@ export class DashboardComponent implements OnInit {
         }
         this.isLoading.set(false);
       },
-      error: () => {
-        // Use dummy data
+      error: (err) => {
+        console.error('Error loading statistics:', err);
+        // Set empty stats instead of dummy data
         this.stats.set({
-          totalApplications: 150,
-          pendingReview: 12,
-          pendingApproval: 8,
-          approved: 45,
-          rejected: 15,
-          disbursed: 70,
-          totalDisbursedAmount: 1500000000
+          totalApplications: 0,
+          pendingReview: 0,
+          pendingApproval: 0,
+          approved: 0,
+          rejected: 0,
+          disbursed: 0,
+          totalDisbursedAmount: 0
         });
         this.isLoading.set(false);
       }
