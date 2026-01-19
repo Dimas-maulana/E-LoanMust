@@ -35,9 +35,15 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
               <span class="gradient-text-gold"> Must</span>
             </h1>
 
-            <p class="text-lg text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0">
-              Ajukan pinjaman dengan mudah melalui aplikasi mobile kami. 
-              Proses cepat, aman, dan terpercaya. Dapatkan dana dalam hitungan jam!
+            <p class="text-lg text-gray-300 mb-4 max-w-xl mx-auto lg:mx-0">
+              <span class="font-bold gradient-text-blue">Electronic Loan</span> · 
+              <span class="font-bold gradient-text-gold">Mobile User</span> · 
+              <span class="font-bold text-white">Smart Transaction</span>
+            </p>
+            <p class="text-base text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0">
+              Platform pinjaman digital legal dan aman yang dioptimalkan untuk pengguna mobile 📱. 
+              Nikmati pengalaman transaksi cerdas dengan proses otomatis yang cepat dan modern. 
+              Dapatkan persetujuan dalam hitungan menit!
             </p>
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -362,37 +368,29 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
           </p>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="glass-card text-center group hover:scale-105 transition-transform">
             <div class="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center text-3xl mx-auto mb-4 group-hover:scale-110 transition-transform">
-              ⚡
+              🏦
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Proses Cepat</h3>
-            <p class="text-gray-400 text-sm">Pengajuan diproses dalam waktu 24 jam kerja</p>
-          </div>
-
-          <div class="glass-card text-center group hover:scale-105 transition-transform">
-            <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-3xl mx-auto mb-4 group-hover:scale-110 transition-transform">
-              🔒
-            </div>
-            <h3 class="text-lg font-bold text-white mb-2">Aman & Terpercaya</h3>
-            <p class="text-gray-400 text-sm">Data Anda dilindungi dengan enkripsi terbaik</p>
+            <h3 class="text-lg font-bold gradient-text-blue mb-2">Electronic Loan</h3>
+            <p class="text-gray-400 text-sm">Platform pinjaman digital legal dan terdaftar. Aman, terpercaya, dan sesuai regulasi OJK</p>
           </div>
 
           <div class="glass-card text-center group hover:scale-105 transition-transform">
             <div class="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center text-3xl mx-auto mb-4 group-hover:scale-110 transition-transform">
-              📱
+              �
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">100% Online</h3>
-            <p class="text-gray-400 text-sm">Ajukan dari mana saja melalui aplikasi mobile</p>
+            <h3 class="text-lg font-bold gradient-text-gold mb-2">Mobile User</h3>
+            <p class="text-gray-400 text-sm">Dirancang khusus untuk pengguna mobile. Interface intuitif dan responsif di semua perangkat</p>
           </div>
 
           <div class="glass-card text-center group hover:scale-105 transition-transform">
-            <div class="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center text-3xl mx-auto mb-4 group-hover:scale-110 transition-transform">
-              💬
+            <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-3xl mx-auto mb-4 group-hover:scale-110 transition-transform">
+              ⚡
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Support 24/7</h3>
-            <p class="text-gray-400 text-sm">Tim support siap membantu kapanpun Anda butuhkan</p>
+            <h3 class="text-lg font-bold text-white mb-2">Smart Transaction</h3>
+            <p class="text-gray-400 text-sm">Proses otomatis dan cepat. Persetujuan dalam hitungan menit dengan teknologi AI terkini</p>
           </div>
         </div>
       </div>
