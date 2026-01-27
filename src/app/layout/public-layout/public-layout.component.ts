@@ -31,12 +31,12 @@ import { CommonModule } from '@angular/common';
 
           <!-- Desktop Menu -->
           <div class="hidden md:flex items-center gap-8">
-            <a href="#products" class="text-gray-300 hover:text-white transition-colors">Produk</a>
+            <a href="#simulation" class="text-gray-300 hover:text-white transition-colors">Loan Simulation</a>
+            <a href="#products" class="text-gray-300 hover:text-white transition-colors">Products</a>
             <a href="#about" class="text-gray-300 hover:text-white transition-colors"
-              >Tentang Kami</a
+              >About Us</a
             >
-            <a href="#contact" class="text-gray-300 hover:text-white transition-colors">Kontak</a>
-            <a routerLink="/auth/login" class="btn-primary"> Login Admin </a>
+            <a href="#contact" class="text-gray-300 hover:text-white transition-colors">Contact</a>
           </div>
 
           <!-- Mobile Menu Button -->
@@ -66,30 +66,29 @@ import { CommonModule } from '@angular/common';
         <div class="md:hidden mt-4 pb-4 border-t border-white/10 pt-4">
           <div class="flex flex-col gap-4">
             <a
+              href="#simulation"
+              class="text-gray-300 hover:text-white transition-colors"
+              (click)="mobileMenuOpen = false"
+              >Loan Simulation</a
+            >
+            <a
               href="#products"
               class="text-gray-300 hover:text-white transition-colors"
               (click)="mobileMenuOpen = false"
-              >Produk</a
+              >Product</a
             >
             <a
               href="#about"
               class="text-gray-300 hover:text-white transition-colors"
               (click)="mobileMenuOpen = false"
-              >Tentang Kami</a
+              >About Us</a
             >
             <a
               href="#contact"
               class="text-gray-300 hover:text-white transition-colors"
               (click)="mobileMenuOpen = false"
-              >Kontak</a
+              >Contact</a
             >
-            <a
-              routerLink="/auth/login"
-              class="btn-primary text-center"
-              (click)="mobileMenuOpen = false"
-            >
-              Login Admin
-            </a>
           </div>
         </div>
         }
@@ -162,7 +161,7 @@ import { CommonModule } from '@angular/common';
           <div>
             <h4 class="text-white font-semibold mb-4">Kontak</h4>
             <ul class="space-y-2 text-gray-400">
-              <li>📧 info&#64;eloanmust.com</li>
+              <li>📧 info&#64;almightydimasdewacoding.com</li>
               <li>📞 021-1234567</li>
               <li>📍 Jakarta, Indonesia</li>
             </ul>

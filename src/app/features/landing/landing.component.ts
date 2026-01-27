@@ -38,7 +38,7 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
             <p class="text-lg text-gray-300 mb-4 max-w-xl mx-auto lg:mx-0">
               <span class="font-bold gradient-text-blue">Electronic Loan</span> · 
               <span class="font-bold gradient-text-gold">Mobile User</span> · 
-              <span class="font-bold text-white">Smart Transaction</span>
+              <span class="font-bold text-white">Simple Transaction</span>
             </p>
             <p class="text-base text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0">
               Platform pinjaman digital legal dan aman yang dioptimalkan untuk pengguna mobile. 
@@ -389,8 +389,8 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
             <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-3xl mx-auto mb-4 group-hover:scale-110 transition-transform">
               ⚡
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Smart Transaction</h3>
-            <p class="text-gray-400 text-sm">Proses otomatis dan cepat. Persetujuan dalam hitungan menit dengan teknologi AI terkini</p>
+            <h3 class="text-lg font-bold text-white mb-2">Simple Transaction</h3>
+            <p class="text-gray-400 text-sm">Proses otomatis dan cepat. Persetujuan dalam hitungan menit dengan pengajuan yang mudah dan simple</p>
           </div>
         </div>
       </div>

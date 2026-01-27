@@ -60,15 +60,42 @@ interface MenuItem {
         </nav>
 
         <!-- User Info -->
-        <div class="p-4 border-t border-white/10">
-          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold">
+        <div class="p-4 border-t border-white/10 relative">
+          <!-- Sidebar User Menu Popup -->
+          @if (sidebarUserMenuOpen()) {
+            <div class="absolute bottom-full left-4 right-4 mb-2 glass-card p-2 z-50 animate-fade-in-up">
+              <a 
+                routerLink="/admin/profile" 
+                class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                (click)="sidebarUserMenuOpen.set(false)"
+              >
+                <span>👤</span>
+                <span>Profile</span>
+              </a>
+              <button 
+                class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+                (click)="logout()"
+              >
+                <span>🚪</span>
+                <span>Logout</span>
+              </button>
+            </div>
+          }
+
+          <div 
+            class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group"
+            (click)="toggleSidebarUserMenu()"
+          >
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold group-hover:scale-105 transition-transform">
               {{ userInitials() }}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-white font-medium truncate">{{ userName() }}</p>
+              <p class="text-white font-medium truncate group-hover:text-blue-400 transition-colors">{{ userName() }}</p>
               <p class="text-xs text-gray-400 truncate">{{ userRole() }}</p>
             </div>
+            <svg class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
         </div>
       </aside>
@@ -76,7 +103,7 @@ interface MenuItem {
       <!-- Main Content -->
       <div class="flex-1 ml-0 lg:ml-64 transition-all duration-300">
         <!-- Top Bar -->
-        <header class="sticky top-0 z-30 glass-panel border-b border-white/10">
+        <header class="relative z-40 glass-panel border-b border-white/10">
           <div class="flex items-center justify-between px-6 py-4">
             <!-- Mobile Menu Toggle -->
             <button 
@@ -202,9 +229,14 @@ export class AdminLayoutComponent implements OnInit {
   sidebarOpen = signal(true);
   notificationOpen = signal(false);
   userMenuOpen = signal(false);
+  sidebarUserMenuOpen = signal(false);
   unreadCount = signal(0);
   notifications = signal<any[]>([]);
   pageTitle = signal('Dashboard');
+
+  toggleSidebarUserMenu(): void {
+    this.sidebarUserMenuOpen.update(v => !v);
+  }
 
   // Menu items with role-based access
   private menuItems: MenuItem[] = [

@@ -95,12 +95,12 @@ import { CurrencyPipe, DateFormatPipe } from '../../shared/pipes';
                     <td class="font-mono text-blue-400">{{ loan.applicationNumber }}</td>
                     <td>
                       <div>
-                        <p class="font-medium text-white">{{ loan.customer.fullName }}</p>
-                        <p class="text-xs text-gray-400">{{ loan.customer.email }}</p>
+                        <p class="font-medium text-white">{{ loan.customer?.fullName || $any(loan).customerName || 'N/A' }}</p>
+                        <p class="text-xs text-gray-400">{{ loan.customer?.email || $any(loan).customerEmail || '-' }}</p>
                       </div>
                     </td>
                     <td>
-                      <span class="badge badge-gold">{{ loan.plafond.name }}</span>
+                      <span class="badge badge-gold">{{ loan.plafond?.name || $any(loan).plafondName || 'N/A' }}</span>
                     </td>
                     <td class="font-semibold text-white">{{ loan.amount | currency }}</td>
                     <td>{{ loan.tenor }} Bulan</td>
@@ -286,23 +286,28 @@ export class ReviewListComponent implements OnInit {
     // Use /api/reviews/pending endpoint for Marketing review list
     this.loanService.getPendingReviewLoans().subscribe({
       next: (response) => {
+        console.log('Pending Review Response:', response);
         if (response.success && response.data) {
           // Backend returns array, handle pagination on frontend
           let allLoans = response.data;
+          console.log('All Loans from API:', allLoans);
+          console.log('First loan sample:', allLoans[0]);
           
           // Apply search filter if any
           if (this.searchQuery) {
             const query = this.searchQuery.toLowerCase();
-            allLoans = allLoans.filter(loan =>
-              loan.applicationNumber.toLowerCase().includes(query) ||
-              loan.customer.fullName.toLowerCase().includes(query) ||
-              loan.customer.email.toLowerCase().includes(query)
+            allLoans = allLoans.filter((loan: any) =>
+              loan.applicationNumber?.toLowerCase().includes(query) ||
+              loan.customer?.fullName?.toLowerCase().includes(query) ||
+              loan.customerName?.toLowerCase().includes(query) ||
+              loan.customer?.email?.toLowerCase().includes(query) ||
+              loan.customerEmail?.toLowerCase().includes(query)
             );
           }
           
           // Apply status filter if any
           if (this.statusFilter) {
-            allLoans = allLoans.filter(loan => loan.status === this.statusFilter);
+            allLoans = allLoans.filter((loan: any) => loan.status === this.statusFilter);
           }
           
           // Frontend pagination
@@ -310,6 +315,10 @@ export class ReviewListComponent implements OnInit {
           const startIndex = this.currentPage() * this.pageSize;
           const endIndex = startIndex + this.pageSize;
           const paginatedLoans = allLoans.slice(startIndex, endIndex);
+          
+          console.log('Total loans:', totalLoans);
+          console.log('Paginated loans:', paginatedLoans);
+          console.log('Setting loans to state...');
           
           this.loans.set(paginatedLoans);
           this.totalItems.set(totalLoans);
