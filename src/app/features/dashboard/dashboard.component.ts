@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { LoanService, NotificationService } from '../../shared/services';
+import { RouterLink, Router } from '@angular/router';
+import { LoanService } from '../../shared/services';
 import { TokenService } from '../../core/auth';
 import { LoanStatistics, AdminRole } from '../../core/models';
 import { CurrencyPipe } from '../../shared/pipes';
@@ -27,192 +27,245 @@ import { CurrencyPipe } from '../../shared/pipes';
         </div>
       </div>
 
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        @if (isSuperAdmin() || isMarketing()) {
-          <div class="stat-card">
-            <div class="flex items-center justify-between">
-              <div class="stat-icon bg-blue-500/20 text-blue-400">📋</div>
-              <span class="badge badge-blue">Baru</span>
-            </div>
-            <p class="stat-value mt-4">{{ stats()?.pendingReview || 0 }}</p>
-            <p class="stat-label">Menunggu Review</p>
-          </div>
-        }
-
-        @if (isSuperAdmin() || isBranchManager()) {
-          <div class="stat-card">
-            <div class="flex items-center justify-between">
-              <div class="stat-icon bg-amber-500/20 text-amber-400">⏳</div>
-              <span class="badge badge-gold">Pending</span>
-            </div>
-            <p class="stat-value mt-4">{{ stats()?.pendingApproval || 0 }}</p>
-            <p class="stat-label">Menunggu Approval</p>
-          </div>
-        }
-
-        @if (isSuperAdmin() || isBackOffice()) {
-          <div class="stat-card">
-            <div class="flex items-center justify-between">
-              <div class="stat-icon bg-emerald-500/20 text-emerald-400">✅</div>
-              <span class="badge badge-green">Ready</span>
-            </div>
-            <p class="stat-value mt-4">{{ stats()?.approved || 0 }}</p>
-            <p class="stat-label">Siap Dicairkan</p>
-          </div>
-        }
-
-        @if (isSuperAdmin()) {
-          <div class="stat-card">
-            <div class="flex items-center justify-between">
-              <div class="stat-icon bg-purple-500/20 text-purple-400">💰</div>
-              <span class="badge badge-purple">Total</span>
-            </div>
-            <p class="stat-value mt-4">{{ stats()?.totalDisbursedAmount || 0 | currency }}</p>
-            <p class="stat-label">Total Pencairan</p>
-          </div>
-        }
-      </div>
-
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Recent Activity -->
-        <div class="lg:col-span-2 glass-card">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-bold text-white">Statistik Pengajuan</h2>
-            <select class="glass-select w-32 text-sm py-2">
-              <option>7 Hari</option>
-              <option>30 Hari</option>
-              <option>90 Hari</option>
-            </select>
+      <!-- Loading State -->
+      @if (isLoading()) {
+        <div class="flex justify-center items-center py-20">
+          <div class="spinner"></div>
+        </div>
+      } @else {
+        <!-- Main Stats Cards (Clickable) -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <!-- Total Pengajuan -->
+          <div 
+            class="stat-card-clickable cursor-pointer"
+            (click)="navigateToLoans()"
+          >
+            <div class="stat-icon-sm bg-blue-500/20 text-blue-400">📋</div>
+            <p class="stat-value-sm">{{ stats()?.totalApplications || 0 }}</p>
+            <p class="stat-label-sm">Total Pengajuan</p>
           </div>
 
-          <!-- Chart Placeholder -->
-          <div class="h-64 flex items-center justify-center bg-slate-800/50 rounded-xl">
-            <div class="text-center">
-              <p class="text-4xl mb-2">📊</p>
-              <p class="text-gray-400">Grafik statistik akan ditampilkan di sini</p>
-            </div>
+          <!-- Menunggu Review -->
+          <div 
+            class="stat-card-clickable cursor-pointer"
+            (click)="navigateToLoans('PENDING_REVIEW')"
+          >
+            <div class="stat-icon-sm bg-amber-500/20 text-amber-400">⏳</div>
+            <p class="stat-value-sm">{{ stats()?.pendingReview || 0 }}</p>
+            <p class="stat-label-sm">Menunggu Review</p>
+          </div>
+
+          <!-- Sudah Review (Menunggu Approval) -->
+          <div 
+            class="stat-card-clickable cursor-pointer"
+            (click)="navigateToLoans('REVIEWED')"
+          >
+            <div class="stat-icon-sm bg-purple-500/20 text-purple-400">✅</div>
+            <p class="stat-value-sm">{{ stats()?.pendingApproval || 0 }}</p>
+            <p class="stat-label-sm">Menunggu Approval</p>
+          </div>
+
+          <!-- Disetujui (Siap Cairkan) -->
+          <div 
+            class="stat-card-clickable cursor-pointer"
+            (click)="navigateToLoans('APPROVED')"
+          >
+            <div class="stat-icon-sm bg-emerald-500/20 text-emerald-400">👍</div>
+            <p class="stat-value-sm">{{ stats()?.approved || 0 }}</p>
+            <p class="stat-label-sm">Siap Dicairkan</p>
+          </div>
+
+          <!-- Sudah Dicairkan -->
+          <div 
+            class="stat-card-clickable cursor-pointer"
+            (click)="navigateToLoans('DISBURSED')"
+          >
+            <div class="stat-icon-sm bg-cyan-500/20 text-cyan-400">💰</div>
+            <p class="stat-value-sm">{{ stats()?.disbursed || 0 }}</p>
+            <p class="stat-label-sm">Sudah Dicairkan</p>
+          </div>
+
+          <!-- Ditolak -->
+          <div 
+            class="stat-card-clickable cursor-pointer"
+            (click)="navigateToLoans('REJECTED')"
+          >
+            <div class="stat-icon-sm bg-red-500/20 text-red-400">❌</div>
+            <p class="stat-value-sm">{{ stats()?.rejected || 0 }}</p>
+            <p class="stat-label-sm">Ditolak</p>
           </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="glass-card">
-          <h2 class="text-lg font-bold text-white mb-6">Aksi Cepat</h2>
-          <div class="space-y-3">
-            @if (isMarketing()) {
-              <a 
-                routerLink="/admin/review" 
-                class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
-              >
-                <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                  📋
+        <!-- Chart & Total Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Chart Section -->
+          <div class="lg:col-span-2 glass-card">
+            <h2 class="text-lg font-bold text-white mb-6">📊 Distribusi Status Pengajuan</h2>
+            
+            <!-- Simple Bar Chart -->
+            <div class="space-y-4">
+              <!-- Menunggu Review -->
+              <div class="flex items-center gap-4">
+                <div class="w-32 text-sm text-gray-400">Menunggu Review</div>
+                <div class="flex-1 bg-slate-800 rounded-full h-8 overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-amber-500 to-amber-400 flex items-center justify-end pr-3"
+                    [style.width]="getBarWidth(stats()?.pendingReview || 0)"
+                  >
+                    <span class="text-xs font-bold text-white">{{ stats()?.pendingReview || 0 }}</span>
+                  </div>
                 </div>
-                <div>
-                  <p class="text-white font-medium">Review Pengajuan</p>
-                  <p class="text-gray-400 text-sm">{{ stats()?.pendingReview || 0 }} pengajuan baru</p>
-                </div>
-              </a>
-            }
-
-            @if (isBranchManager()) {
-              <a 
-                routerLink="/admin/approval" 
-                class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
-              >
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
-                  ✅
-                </div>
-                <div>
-                  <p class="text-white font-medium">Approval Pinjaman</p>
-                  <p class="text-gray-400 text-sm">{{ stats()?.pendingApproval || 0 }} menunggu</p>
-                </div>
-              </a>
-            }
-
-            @if (isBackOffice()) {
-              <a 
-                routerLink="/admin/disbursement" 
-                class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
-              >
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
-                  💰
-                </div>
-                <div>
-                  <p class="text-white font-medium">Pencairan Dana</p>
-                  <p class="text-gray-400 text-sm">{{ stats()?.approved || 0 }} siap dicairkan</p>
-                </div>
-              </a>
-            }
-
-            @if (isSuperAdmin()) {
-              <a 
-                routerLink="/admin/users" 
-                class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
-              >
-                <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
-                  👥
-                </div>
-                <div>
-                  <p class="text-white font-medium">Kelola User</p>
-                  <p class="text-gray-400 text-sm">Manajemen pengguna</p>
-                </div>
-              </a>
-              <a 
-                routerLink="/admin/products" 
-                class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
-              >
-                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
-                  📦
-                </div>
-                <div>
-                  <p class="text-white font-medium">Kelola Produk</p>
-                  <p class="text-gray-400 text-sm">Pengaturan plafond</p>
-                </div>
-              </a>
-            }
-
-            <a 
-              routerLink="/admin/notifications" 
-              class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
-            >
-              <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center text-red-400 group-hover:scale-110 transition-transform">
-                🔔
               </div>
-              <div>
-                <p class="text-white font-medium">Notifikasi</p>
-                <p class="text-gray-400 text-sm">Lihat semua notifikasi</p>
+
+              <!-- Menunggu Approval -->
+              <div class="flex items-center gap-4">
+                <div class="w-32 text-sm text-gray-400">Menunggu Approval</div>
+                <div class="flex-1 bg-slate-800 rounded-full h-8 overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-purple-500 to-purple-400 flex items-center justify-end pr-3"
+                    [style.width]="getBarWidth(stats()?.pendingApproval || 0)"
+                  >
+                    <span class="text-xs font-bold text-white">{{ stats()?.pendingApproval || 0 }}</span>
+                  </div>
+                </div>
               </div>
-            </a>
+
+              <!-- Siap Dicairkan -->
+              <div class="flex items-center gap-4">
+                <div class="w-32 text-sm text-gray-400">Siap Dicairkan</div>
+                <div class="flex-1 bg-slate-800 rounded-full h-8 overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 flex items-center justify-end pr-3"
+                    [style.width]="getBarWidth(stats()?.approved || 0)"
+                  >
+                    <span class="text-xs font-bold text-white">{{ stats()?.approved || 0 }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sudah Dicairkan -->
+              <div class="flex items-center gap-4">
+                <div class="w-32 text-sm text-gray-400">Sudah Dicairkan</div>
+                <div class="flex-1 bg-slate-800 rounded-full h-8 overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 flex items-center justify-end pr-3"
+                    [style.width]="getBarWidth(stats()?.disbursed || 0)"
+                  >
+                    <span class="text-xs font-bold text-white">{{ stats()?.disbursed || 0 }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ditolak -->
+              <div class="flex items-center gap-4">
+                <div class="w-32 text-sm text-gray-400">Ditolak</div>
+                <div class="flex-1 bg-slate-800 rounded-full h-8 overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-red-500 to-red-400 flex items-center justify-end pr-3"
+                    [style.width]="getBarWidth(stats()?.rejected || 0)"
+                  >
+                    <span class="text-xs font-bold text-white">{{ stats()?.rejected || 0 }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Amount Cards -->
+          <div class="space-y-6">
+            <!-- Total Nilai Pengajuan (All Applications) -->
+            <div class="glass-card bg-gradient-to-br from-slate-600/20 to-slate-800/20 border border-slate-500/20">
+              <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-slate-500/20 flex items-center justify-center text-2xl">📊</div>
+                <div>
+                  <p class="text-sm text-gray-400">Total Nilai Pengajuan</p>
+                  <p class="text-2xl font-bold text-white">{{ stats()?.totalAllAmount || 0 | currency }}</p>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500">Total nominal dari semua pengajuan pinjaman</p>
+            </div>
+
+            <!-- Total Pencairan -->
+            <div class="glass-card bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 border border-emerald-500/20">
+              <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-2xl">💰</div>
+                <div>
+                  <p class="text-sm text-gray-400">Total Pencairan</p>
+                  <p class="text-2xl font-bold text-emerald-400">{{ stats()?.totalDisbursedAmount || 0 | currency }}</p>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500">Total dana yang sudah dicairkan ke nasabah</p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="glass-card">
+              <h3 class="font-semibold text-white mb-4">⚡ Aksi Cepat</h3>
+              <div class="space-y-2">
+                <a 
+                  routerLink="/admin/loans" 
+                  class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
+                >
+                  <span class="text-blue-400">📋</span>
+                  <span class="text-gray-300 group-hover:text-white">Lihat Semua Pengajuan</span>
+                </a>
+                @if (isSuperAdmin()) {
+                  <a 
+                    routerLink="/admin/users" 
+                    class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
+                  >
+                    <span class="text-purple-400">👥</span>
+                    <span class="text-gray-300 group-hover:text-white">Kelola User</span>
+                  </a>
+                  <a 
+                    routerLink="/admin/products" 
+                    class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
+                  >
+                    <span class="text-amber-400">📦</span>
+                    <span class="text-gray-300 group-hover:text-white">Kelola Produk</span>
+                  </a>
+                }
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Overview Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="glass-card text-center">
-          <p class="text-3xl font-bold text-white mb-2">{{ stats()?.totalApplications || 0 }}</p>
-          <p class="text-gray-400 text-sm">Total Pengajuan</p>
+        <!-- Role Badge -->
+        <div class="glass-card flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold">
+              {{ userInitials() }}
+            </div>
+            <div>
+              <p class="text-white font-medium">{{ userName() }}</p>
+              <p class="text-sm text-gray-400">{{ currentRoleName() }}</p>
+            </div>
+          </div>
+          <div class="badge badge-blue text-sm px-4 py-2">
+            {{ currentRoleName() }}
+          </div>
         </div>
-        <div class="glass-card text-center">
-          <p class="text-3xl font-bold text-emerald-400 mb-2">{{ stats()?.approved || 0 }}</p>
-          <p class="text-gray-400 text-sm">Disetujui</p>
-        </div>
-        <div class="glass-card text-center">
-          <p class="text-3xl font-bold text-red-400 mb-2">{{ stats()?.rejected || 0 }}</p>
-          <p class="text-gray-400 text-sm">Ditolak</p>
-        </div>
-        <div class="glass-card text-center">
-          <p class="text-3xl font-bold text-blue-400 mb-2">{{ stats()?.disbursed || 0 }}</p>
-          <p class="text-gray-400 text-sm">Dicairkan</p>
-        </div>
-      </div>
+      }
     </div>
-  `
+  `,
+  styles: [`
+    .stat-card-clickable {
+      @apply glass-card text-center py-4 px-3 hover:bg-white/10 hover:scale-105 transition-all duration-200;
+    }
+    .stat-icon-sm {
+      @apply w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 text-lg;
+    }
+    .stat-value-sm {
+      @apply text-2xl font-bold text-white;
+    }
+    .stat-label-sm {
+      @apply text-xs text-gray-400 mt-1;
+    }
+  `]
 })
 export class DashboardComponent implements OnInit {
   private loanService = inject(LoanService);
   private tokenService = inject(TokenService);
+  private router = inject(Router);
 
   stats = signal<LoanStatistics | null>(null);
   isLoading = signal(true);
@@ -220,6 +273,23 @@ export class DashboardComponent implements OnInit {
   userName = computed(() => {
     const user = this.tokenService.getUser();
     return user?.firstName || this.tokenService.getUsername() || 'Admin';
+  });
+
+  userInitials = computed(() => {
+    const name = this.userName();
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  });
+
+  currentRoleName = computed(() => {
+    if (this.isSuperAdmin()) return 'Super Admin';
+    if (this.isMarketing()) return 'Marketing';
+    if (this.isBranchManager()) return 'Branch Manager';
+    if (this.isBackOffice()) return 'Back Office';
+    return 'Admin';
   });
 
   currentDate = computed(() => {
@@ -245,7 +315,6 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading statistics:', err);
-        // Set empty stats instead of dummy data
         this.stats.set({
           totalApplications: 0,
           pendingReview: 0,
@@ -253,11 +322,27 @@ export class DashboardComponent implements OnInit {
           approved: 0,
           rejected: 0,
           disbursed: 0,
-          totalDisbursedAmount: 0
+          totalDisbursedAmount: 0,
+          totalLoanAmount: 0,
+          totalAllAmount: 0
         });
         this.isLoading.set(false);
       }
     });
+  }
+
+  navigateToLoans(status?: string): void {
+    if (status) {
+      this.router.navigate(['/admin/loans'], { queryParams: { status } });
+    } else {
+      this.router.navigate(['/admin/loans']);
+    }
+  }
+
+  getBarWidth(value: number): string {
+    const total = this.stats()?.totalApplications || 1;
+    const percentage = Math.max(5, (value / total) * 100);
+    return `${percentage}%`;
   }
 
   isSuperAdmin(): boolean {
@@ -265,14 +350,14 @@ export class DashboardComponent implements OnInit {
   }
 
   isMarketing(): boolean {
-    return this.tokenService.hasRole(AdminRole.MARKETING) || this.isSuperAdmin();
+    return this.tokenService.hasRole(AdminRole.MARKETING);
   }
 
   isBranchManager(): boolean {
-    return this.tokenService.hasRole(AdminRole.BRANCH_MANAGER) || this.isSuperAdmin();
+    return this.tokenService.hasRole(AdminRole.BRANCH_MANAGER);
   }
 
   isBackOffice(): boolean {
-    return this.tokenService.hasRole(AdminRole.BACK_OFFICE) || this.isSuperAdmin();
+    return this.tokenService.hasRole(AdminRole.BACK_OFFICE);
   }
 }

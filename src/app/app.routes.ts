@@ -58,14 +58,23 @@ export const routes: Routes = [
         title: 'Dashboard - E-Loan Must Admin'
       },
       
-      // Marketing - Review
+      // Unified Loan Application
       {
-        path: 'review',
-        loadComponent: () => import('./features/review/review-list.component').then(m => m.ReviewListComponent),
+        path: 'loans',
+        loadComponent: () => import('./features/loans/loan-list.component').then(m => m.LoanListComponent),
         canActivate: [roleGuard],
-        data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.MARKETING] },
-        title: 'Review Pinjaman - E-Loan Must Admin'
+        data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.MARKETING, AdminRole.BRANCH_MANAGER, AdminRole.BACK_OFFICE] },
+        title: 'Loan Application - E-Loan Must Admin'
       },
+      {
+        path: 'loans/:id',
+        loadComponent: () => import('./features/loans/loan-detail.component').then(m => m.LoanDetailComponent),
+        canActivate: [roleGuard],
+        data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.MARKETING, AdminRole.BRANCH_MANAGER, AdminRole.BACK_OFFICE] },
+        title: 'Detail Pengajuan - E-Loan Must Admin'
+      },
+      
+      // Marketing - Review (legacy, redirect to loans)
       
       // Branch Manager - Approval
       {

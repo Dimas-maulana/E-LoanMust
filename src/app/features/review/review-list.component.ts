@@ -244,7 +244,6 @@ import { CurrencyPipe, DateFormatPipe } from '../../shared/pipes';
                 <button 
                   class="btn-success px-6"
                   (click)="completeReview()"
-                  [disabled]="!reviewNotes"
                 >
                   Selesai Review
                 </button>
@@ -345,17 +344,11 @@ export class ReviewListComponent implements OnInit {
   }
 
   startReview(loan: LoanApplication): void {
-    this.loanService.startReview(loan.id).subscribe({
-      next: () => {
-        loan.status = LoanStatus.IN_REVIEW;
-        this.selectedLoan.set(loan);
-        this.toastService.success('Review dimulai');
-      },
-      error: () => {
-        loan.status = LoanStatus.IN_REVIEW;
-        this.selectedLoan.set(loan);
-      }
-    });
+    // No specific endpoint for start review in new API (it's combined in submit review)
+    // Just update local state to show review UI if needed or proceed to detail
+    loan.status = LoanStatus.IN_REVIEW;
+    this.selectedLoan.set(loan);
+    this.toastService.success('Silakan isi catatan review');
   }
 
   viewDetail(loan: LoanApplication): void {
@@ -370,18 +363,27 @@ export class ReviewListComponent implements OnInit {
 
   completeReview(): void {
     const loan = this.selectedLoan();
-    if (!loan || !this.reviewNotes) return;
+    if (!loan) {
+      console.error('No loan selected');
+      return;
+    }
 
-    this.loanService.completeReview(loan.id, this.reviewNotes).subscribe({
-      next: () => {
+    // Use default notes if empty
+    const notes = this.reviewNotes?.trim() || 'Review selesai, data lengkap';
+    
+    console.log('Submitting review for loan:', loan.id, 'with notes:', notes);
+
+    this.loanService.submitReview(loan.id, 'APPROVED', notes).subscribe({
+      next: (response) => {
+        console.log('Review success:', response);
         this.toastService.success('Review selesai! Pengajuan diteruskan ke Branch Manager.');
         this.closeDetail();
         this.loadLoans();
       },
-      error: () => {
-        this.toastService.success('Review selesai!');
+      error: (err) => {
+        console.error('Review error:', err);
+        this.toastService.error('Gagal menyelesaikan review: ' + (err.error?.message || err.message || 'Unknown error'));
         this.closeDetail();
-        this.loadLoans();
       }
     });
   }

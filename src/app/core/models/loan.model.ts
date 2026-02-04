@@ -61,6 +61,9 @@ export interface LoanApplication {
   disbursementAmount?: number;
   disbursementNotes?: string;
   
+  latitude?: number;
+  longitude?: number;
+  
   createdAt?: string;
   updatedAt?: string;
 }
@@ -97,6 +100,8 @@ export interface LoanStatistics {
   rejected: number;
   disbursed: number;
   totalDisbursedAmount: number;
+  totalLoanAmount: number;
+  totalAllAmount: number; // Total value of all loan applications
 }
 
 // Loan simulation request (public)

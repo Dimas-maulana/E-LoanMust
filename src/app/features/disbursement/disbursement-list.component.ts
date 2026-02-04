@@ -331,21 +331,16 @@ export class DisbursementListComponent implements OnInit {
 
     this.showConfirmModal.set(false);
 
-    this.loanService.disburseLoan({
-      loanId: loan.id,
-      disbursementAmount: this.disbursementAmount,
-      disbursementDate: this.disbursementDate,
-      notes: this.disbursementNotes
-    }).subscribe({
+    this.loanService.processDisbursement(loan.id).subscribe({
       next: () => {
         this.toastService.success('Dana berhasil dicairkan!');
         this.closeDisbursement();
         this.loadLoans();
       },
-      error: () => {
-        this.toastService.success('Dana berhasil dicairkan!');
+      error: (err) => {
+        console.error('Disbursement error:', err);
+        this.toastService.error('Gagal mencairkan dana');
         this.closeDisbursement();
-        this.loadLoans();
       }
     });
   }

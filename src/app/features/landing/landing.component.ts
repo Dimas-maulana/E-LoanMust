@@ -328,8 +328,8 @@ import { CurrencyPipe, PercentagePipe } from '../../shared/pipes';
                     </span>
                   </div>
                   <div class="flex justify-between items-center py-3 border-b border-white/10">
-                    <span class="text-gray-400">Tenor</span>
-                    <span class="text-white font-semibold">{{ product.minTenor }} - {{ product.maxTenor }} Bulan</span>
+                    <span class="text-gray-400">Tenor sampai dengan</span>
+                    <span class="text-white font-semibold">{{ getMaxTenor(product) }} Bulan</span>
                   </div>
                   <div class="flex justify-between items-center py-3 border-b border-white/10">
                     <span class="text-gray-400">Bunga</span>
@@ -576,6 +576,19 @@ export class LandingComponent implements OnInit {
     if (upperName.includes('GOLD')) return 'GOLD';
     if (upperName.includes('SILVER')) return 'SILVER';
     return 'SILVER';
+  }
+
+  getMaxTenor(product: any): string {
+    // Try various possible field names for max tenor
+    const maxTenor = product.maxTenorMonth || product.maxTenor || product.tenorMonth || product.tenor;
+    if (maxTenor) {
+      return maxTenor.toString();
+    }
+    // Check if minTenor and maxTenor exist
+    if (product.minTenor && product.maxTenor) {
+      return `${product.minTenor} - ${product.maxTenor}`;
+    }
+    return '-';
   }
 
   // Simulation methods

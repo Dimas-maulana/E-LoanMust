@@ -408,27 +408,21 @@ export class ApprovalListComponent implements OnInit {
     }
 
     this.pendingAction = () => {
-      const request = {
-        loanId: loan.id,
-        approved,
-        notes: this.approvalNotes,
-        rejectionReason: approved ? undefined : this.approvalNotes
-      };
+      // Use new submitApproval method
+      const status = approved ? 'APPROVED' : 'REJECTED';
+      // For rejection, combine notes and reason
+      const note = approved ? this.approvalNotes : (this.approvalNotes ? `${this.approvalNotes}` : 'Ditolak');
 
-      const action$ = approved 
-        ? this.loanService.approveLoan(request)
-        : this.loanService.rejectLoan(request);
-
-      action$.subscribe({
+      this.loanService.submitApproval(loan.id, status, note).subscribe({
         next: () => {
           this.toastService.success(approved ? 'Pinjaman berhasil disetujui!' : 'Pinjaman ditolak.');
           this.closeDetail();
           this.loadLoans();
         },
-        error: () => {
-          this.toastService.success(approved ? 'Pinjaman berhasil disetujui!' : 'Pinjaman ditolak.');
+        error: (err) => {
+          console.error('Approval error:', err);
+          this.toastService.error('Gagal memproses approval');
           this.closeDetail();
-          this.loadLoans();
         }
       });
     };

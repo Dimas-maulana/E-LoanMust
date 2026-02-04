@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   LoanApplication,
@@ -24,33 +25,76 @@ export class LoanService {
   constructor(private http: HttpClient) {}
 
   // Get loan statistics for dashboard (using multiple endpoints)
+  // Each endpoint has its own error handler so partial data can still be displayed
   getStatistics(): Observable<ApiResponse<LoanStatistics>> {
     return new Observable(observer => {
-      // Use forkJoin to call multiple endpoints simultaneously
+      // Use forkJoin with catchError for each request to handle role-based access
       const stats$ = {
-        submitted: this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/all`),
-        onReview: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/reviews/pending`),
-        needApproval: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/approvals/pending`),
-        disbursed: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/disbursements`)
+        allLoans: this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/all`).pipe(
+          catchError(err => {
+            console.warn('Cannot access /loans/all:', err.status);
+            return of({ success: false, data: [], message: '' } as ApiResponse<any[]>);
+          })
+        ),
+        pendingReview: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/reviews/pending`).pipe(
+          catchError(err => {
+            console.warn('Cannot access /reviews/pending:', err.status);
+            return of({ success: false, data: [], message: '' } as ApiResponse<any[]>);
+          })
+        ),
+        pendingApproval: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/approvals/pending`).pipe(
+          catchError(err => {
+            console.warn('Cannot access /approvals/pending:', err.status);
+            return of({ success: false, data: [], message: '' } as ApiResponse<any[]>);
+          })
+        ),
+        disbursed: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/disbursements`).pipe(
+          catchError(err => {
+            console.warn('Cannot access /disbursements:', err.status);
+            return of({ success: false, data: [], message: '' } as ApiResponse<any[]>);
+          })
+        ),
+        pendingDisbursement: this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/disbursements/pending`).pipe(
+          catchError(err => {
+            console.warn('Cannot access /disbursements/pending:', err.status);
+            return of({ success: false, data: [], message: '' } as ApiResponse<any[]>);
+          })
+        )
       };
 
       forkJoin(stats$).subscribe({
         next: (results) => {
-          const submittedLoans = results.submitted?.data || [];
-          const reviewLoans = results.onReview?.data || [];
-          const approvalLoans = results.needApproval?.data || [];
+          const allLoans = results.allLoans?.data || [];
+          const pendingReviewLoans = results.pendingReview?.data || [];
+          const pendingApprovalLoans = results.pendingApproval?.data || [];
           const disbursedLoans = results.disbursed?.data || [];
+          const pendingDisbursementLoans = results.pendingDisbursement?.data || [];
+
+          // Filter approved and rejected from all loans (no specific endpoint for these)
+          const approvedLoans = allLoans.filter((l: any) => l.status === 'APPROVED');
+          const rejectedLoans = allLoans.filter((l: any) => l.status === 'REJECTED');
+
+          // Calculate total amounts
+          const totalAllAmount = allLoans
+            .reduce((sum: number, l: any) => sum + (l.amount || 0), 0);
+          const totalApprovedAmount = [...approvedLoans, ...disbursedLoans]
+            .reduce((sum: number, l: any) => sum + (l.amount || 0), 0);
+          const totalDisbursedAmount = disbursedLoans
+            .reduce((sum: number, l: any) => sum + (l.amount || l.disbursementAmount || 0), 0);
 
           const stats: LoanStatistics = {
-            totalApplications: submittedLoans.length,
-            pendingReview: reviewLoans.length,
-            pendingApproval: approvalLoans.length,
-            approved: approvalLoans.length, // Same as pending approval
-            rejected: submittedLoans.filter((l: any) => l.status === 'REJECTED').length,
+            totalApplications: allLoans.length,
+            pendingReview: pendingReviewLoans.length,
+            pendingApproval: pendingApprovalLoans.length,
+            approved: approvedLoans.length + pendingDisbursementLoans.length, // Include pending disbursement as "approved"
+            rejected: rejectedLoans.length,
             disbursed: disbursedLoans.length,
-            totalDisbursedAmount: disbursedLoans
-              .reduce((sum: number, l: any) => sum + (l.amount || 0), 0)
+            totalDisbursedAmount: totalDisbursedAmount,
+            totalLoanAmount: totalApprovedAmount,
+            totalAllAmount: totalAllAmount
           };
+
+          console.log('Statistics calculated:', stats);
 
           observer.next({
             success: true,
@@ -74,7 +118,9 @@ export class LoanService {
               approved: 0,
               rejected: 0,
               disbursed: 0,
-              totalDisbursedAmount: 0
+              totalDisbursedAmount: 0,
+              totalLoanAmount: 0,
+              totalAllAmount: 0
             },
             code: 200,
             timestamp: new Date().toISOString()
@@ -137,57 +183,107 @@ export class LoanService {
     return this.http.get<ApiResponse<LoanApplication[]>>(`${environment.apiUrl}/reviews/pending`);
   }
 
-  // Get loans for approval (BRANCH_MANAGER) - status = IN_REVIEW or REVIEWED
+  // Get all loans for admin (SUPER_ADMIN) - from /api/loans/all
+  getAllLoansForAdmin(): Observable<ApiResponse<LoanApplication[]>> {
+    return this.http.get<ApiResponse<LoanApplication[]>>(`${this.apiUrl}/all`);
+  }
+
+  // Get pending approval loans (BRANCH_MANAGER) - from /api/approvals/pending
+  getPendingApprovalLoans(): Observable<ApiResponse<LoanApplication[]>> {
+    return this.http.get<ApiResponse<LoanApplication[]>>(`${environment.apiUrl}/approvals/pending`);
+  }
+
+  // Get pending disbursement loans (BACK_OFFICE) - from /api/disbursements/pending
+  getPendingDisbursementLoans(): Observable<ApiResponse<LoanApplication[]>> {
+    return this.http.get<ApiResponse<LoanApplication[]>>(`${environment.apiUrl}/disbursements/pending`);
+  }
+
+  // Get loans for approval (BRANCH_MANAGER) - from /api/approvals/pending
   getLoansForApproval(page: number = 0, size: number = 10): Observable<ApiResponse<PageResponse<LoanApplication>>> {
-    return this.http.get<ApiResponse<PageResponse<LoanApplication>>>(`${this.apiUrl}/pending-approval`, {
-      params: { page: page.toString(), size: size.toString() }
+    // Use the correct endpoint for pending approvals
+    return new Observable(observer => {
+      this.http.get<ApiResponse<LoanApplication[]>>(`${environment.apiUrl}/approvals/pending`).subscribe({
+        next: (response) => {
+          // Convert array response to page response
+          const content = response.data || [];
+          const pageResponse: PageResponse<LoanApplication> = {
+            content: content.slice(page * size, (page + 1) * size),
+            totalElements: content.length,
+            totalPages: Math.ceil(content.length / size),
+            size: size,
+            page: page,
+            first: page === 0,
+            last: (page + 1) * size >= content.length
+          };
+          observer.next({
+            success: response.success,
+            message: response.message,
+            data: pageResponse,
+            code: 200,
+            timestamp: new Date().toISOString()
+          } as ApiResponse<PageResponse<LoanApplication>>);
+          observer.complete();
+        },
+        error: (err) => {
+          console.error('Error fetching pending approvals:', err);
+          observer.error(err);
+        }
+      });
     });
   }
 
-  // Get loans for disbursement (BACK_OFFICE) - status = APPROVED
+  // Get loans for disbursement (BACK_OFFICE) - from /api/disbursements/pending
   getLoansForDisbursement(page: number = 0, size: number = 10): Observable<ApiResponse<PageResponse<LoanApplication>>> {
-    return this.getLoansByStatus(LoanStatus.APPROVED, page, size);
-  }
-
-  // Review loan (MARKETING)
-  reviewLoan(request: ReviewLoanRequest): Observable<ApiResponse<LoanApplication>> {
-    return this.http.post<ApiResponse<LoanApplication>>(`${this.apiUrl}/${request.loanId}/review`, {
-      notes: request.notes,
-      status: request.status
+    // Use the correct endpoint for pending disbursements
+    return new Observable(observer => {
+      this.http.get<ApiResponse<LoanApplication[]>>(`${environment.apiUrl}/disbursements/pending`).subscribe({
+        next: (response) => {
+          // Convert array response to page response
+          const content = response.data || [];
+          const pageResponse: PageResponse<LoanApplication> = {
+            content: content.slice(page * size, (page + 1) * size),
+            totalElements: content.length,
+            totalPages: Math.ceil(content.length / size),
+            size: size,
+            page: page,
+            first: page === 0,
+            last: (page + 1) * size >= content.length
+          };
+          observer.next({
+            success: response.success,
+            message: response.message,
+            data: pageResponse,
+            code: 200,
+            timestamp: new Date().toISOString()
+          } as ApiResponse<PageResponse<LoanApplication>>);
+          observer.complete();
+        },
+        error: (err) => {
+          console.error('Error fetching pending disbursements:', err);
+          observer.error(err);
+        }
+      });
     });
   }
 
-  // Set loan to IN_REVIEW status (MARKETING)
-  startReview(loanId: number): Observable<ApiResponse<LoanApplication>> {
-    return this.http.patch<ApiResponse<LoanApplication>>(`${this.apiUrl}/${loanId}/start-review`, {});
-  }
-
-  // Complete review (MARKETING)
-  completeReview(loanId: number, notes: string): Observable<ApiResponse<LoanApplication>> {
-    return this.http.post<ApiResponse<LoanApplication>>(`${this.apiUrl}/${loanId}/complete-review`, { notes });
-  }
-
-  // Approve loan (BRANCH_MANAGER)
-  approveLoan(request: ApprovalLoanRequest): Observable<ApiResponse<LoanApplication>> {
-    return this.http.post<ApiResponse<LoanApplication>>(`${this.apiUrl}/${request.loanId}/approve`, {
-      notes: request.notes
+  // Review loan (MARKETING) - POST /api/reviews/{loanId}
+  submitReview(loanId: number, status: 'APPROVED' | 'REJECTED', notes: string): Observable<ApiResponse<LoanApplication>> {
+    return this.http.post<ApiResponse<LoanApplication>>(`${environment.apiUrl}/reviews/${loanId}`, {
+      reviewStatus: status,
+      reviewNote: notes
     });
   }
 
-  // Reject loan (BRANCH_MANAGER)
-  rejectLoan(request: ApprovalLoanRequest): Observable<ApiResponse<LoanApplication>> {
-    return this.http.post<ApiResponse<LoanApplication>>(`${this.apiUrl}/${request.loanId}/reject`, {
-      notes: request.notes,
-      rejectionReason: request.rejectionReason
+  // Submit approval/rejection (BRANCH_MANAGER) - POST /api/approvals/{loanId}
+  submitApproval(loanId: number, status: 'APPROVED' | 'REJECTED', notes: string): Observable<ApiResponse<LoanApplication>> {
+    return this.http.post<ApiResponse<LoanApplication>>(`${environment.apiUrl}/approvals/${loanId}`, {
+      approvalStatus: status,
+      approvalNote: notes
     });
   }
 
-  // Disburse loan (BACK_OFFICE)
-  disburseLoan(request: DisbursementRequest): Observable<ApiResponse<LoanApplication>> {
-    return this.http.post<ApiResponse<LoanApplication>>(`${this.apiUrl}/${request.loanId}/disburse`, {
-      disbursementAmount: request.disbursementAmount,
-      disbursementDate: request.disbursementDate,
-      notes: request.notes
-    });
+  // Process disbursement (BACK_OFFICE) - POST /api/disbursements/{loanId}
+  processDisbursement(loanId: number): Observable<ApiResponse<LoanApplication>> {
+    return this.http.post<ApiResponse<LoanApplication>>(`${environment.apiUrl}/disbursements/${loanId}`, {});
   }
 }

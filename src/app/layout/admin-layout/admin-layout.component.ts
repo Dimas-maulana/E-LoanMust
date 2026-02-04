@@ -247,22 +247,10 @@ export class AdminLayoutComponent implements OnInit {
       roles: [AdminRole.SUPER_ADMIN, AdminRole.MARKETING, AdminRole.BRANCH_MANAGER, AdminRole.BACK_OFFICE]
     },
     {
-      label: 'Review Pinjaman',
+      label: 'Loan Application',
       icon: '📋',
-      route: '/admin/review',
-      roles: [AdminRole.MARKETING]
-    },
-    {
-      label: 'Approval Pinjaman',
-      icon: '✅',
-      route: '/admin/approval',
-      roles: [AdminRole.BRANCH_MANAGER]
-    },
-    {
-      label: 'Disbursement',
-      icon: '💰',
-      route: '/admin/disbursement',
-      roles: [AdminRole.BACK_OFFICE]
+      route: '/admin/loans',
+      roles: [AdminRole.SUPER_ADMIN, AdminRole.MARKETING, AdminRole.BRANCH_MANAGER, AdminRole.BACK_OFFICE]
     },
     {
       label: 'Manajemen User',
@@ -281,12 +269,6 @@ export class AdminLayoutComponent implements OnInit {
       icon: '📦',
       route: '/admin/products',
       roles: [AdminRole.SUPER_ADMIN]
-    },
-    {
-      label: 'Notifikasi',
-      icon: '🔔',
-      route: '/admin/notifications',
-      roles: [AdminRole.SUPER_ADMIN, AdminRole.MARKETING, AdminRole.BRANCH_MANAGER, AdminRole.BACK_OFFICE]
     }
   ];
 
