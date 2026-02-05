@@ -54,8 +54,9 @@ import { CurrencyPipe, DateFormatPipe } from '../../shared/pipes';
                 (change)="loadLoans()"
               >
                 <option value="">Semua Status</option>
-                <option value="PENDING_REVIEW">Menunggu Review</option>
-                <option value="REVIEWED">Sudah Review</option>
+                <option value="SUBMITTED">Menunggu Review</option>
+                <option value="IN_REVIEW">Sedang Direview</option>
+                <option value="REVIEWED">Menunggu Approval</option>
                 <option value="APPROVED">Disetujui</option>
                 <option value="REJECTED">Ditolak</option>
                 <option value="DISBURSED">Sudah Dicairkan</option>
@@ -85,60 +86,91 @@ import { CurrencyPipe, DateFormatPipe } from '../../shared/pipes';
           ></app-empty-state>
         } @else {
           <div class="overflow-x-auto">
-            <table class="glass-table">
-              <thead>
-                <tr>
-                  <th>No. Pengajuan</th>
-                  <th>Customer</th>
-                  <th>Produk</th>
-                  <th>Jumlah</th>
-                  <th>Tenor</th>
-                  <th>Tanggal</th>
-                  <th>Status</th>
-                  <th class="text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (loan of loans(); track loan.id; let i = $index) {
-                  <tr class="cursor-pointer hover:bg-white/5" (click)="viewDetail(loan)">
-                    <td class="font-mono text-blue-400">{{ getRowNumber(i) }}</td>
-                    <td>
-                      <div>
-                        <p class="font-medium text-white">{{ getCustomerName(loan) }}</p>
-                        <p class="text-xs text-gray-400">{{ getCustomerEmail(loan) }}</p>
-                      </div>
-                    </td>
-                    <td>
-                      <span class="badge badge-gold">{{ getPlafondName(loan) }}</span>
-                    </td>
-                    <td class="font-semibold text-white">{{ loan.amount | currency }}</td>
-                    <td>{{ getTenorDisplay(loan) }}</td>
-                    <td>{{ loan.createdAt | dateFormat }}</td>
-                    <td>
-                      <app-status-badge [status]="loan.status"></app-status-badge>
-                    </td>
-                    <td class="text-center" (click)="$event.stopPropagation()">
-                      <div class="flex justify-center gap-2">
-                        <button 
-                          class="btn-outline px-3 py-2 text-sm"
-                          (click)="viewDetail(loan)"
-                        >
-                          Detail
-                        </button>
-                        @if (canTakeAction(loan)) {
-                          <button 
-                            class="btn-primary px-3 py-2 text-sm"
-                            (click)="takeAction(loan)"
-                          >
-                            {{ getActionLabel(loan) }}
-                          </button>
-                        }
-                      </div>
-                    </td>
+            @if (isDisbursementMode()) {
+              <!-- Disbursement Table -->
+              <table class="glass-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>ID Loan</th>
+                    <th>Jumlah Pencairan</th>
+                    <th>Tanggal Pencairan</th>
+                    <th>Status</th>
+                    <th>Diproses Oleh</th>
                   </tr>
-                }
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  @for (item of loans(); track item.id; let i = $index) {
+                    <tr class="hover:bg-white/5">
+                      <td class="font-mono text-blue-400">{{ getRowNumber(i) }}</td>
+                      <td class="font-mono text-white">{{ getDisbursementLoanId(item) }}</td>
+                      <td class="font-semibold text-emerald-400">{{ getDisbursementAmount(item) | currency }}</td>
+                      <td>{{ getDisbursementDate(item) | dateFormat }}</td>
+                      <td>
+                        <span class="badge badge-green">{{ getDisbursementStatus(item) }}</span>
+                      </td>
+                      <td class="text-white">{{ getDisbursementProcessedBy(item) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <!-- Regular Loan Table -->
+              <table class="glass-table">
+                <thead>
+                  <tr>
+                    <th>No. Pengajuan</th>
+                    <th>Customer</th>
+                    <th>Produk</th>
+                    <th>Jumlah</th>
+                    <th>Tenor</th>
+                    <th>Tanggal</th>
+                    <th>Status</th>
+                    <th class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (loan of loans(); track loan.id; let i = $index) {
+                    <tr class="cursor-pointer hover:bg-white/5" (click)="viewDetail(loan)">
+                      <td class="font-mono text-blue-400">{{ getRowNumber(i) }}</td>
+                      <td>
+                        <div>
+                          <p class="font-medium text-white">{{ getCustomerName(loan) }}</p>
+                          <p class="text-xs text-gray-400">{{ getCustomerEmail(loan) }}</p>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge badge-gold">{{ getPlafondName(loan) }}</span>
+                      </td>
+                      <td class="font-semibold text-white">{{ loan.amount | currency }}</td>
+                      <td>{{ getTenorDisplay(loan) }}</td>
+                      <td>{{ loan.createdAt | dateFormat }}</td>
+                      <td>
+                        <app-status-badge [status]="loan.status"></app-status-badge>
+                      </td>
+                      <td class="text-center" (click)="$event.stopPropagation()">
+                        <div class="flex justify-center gap-2">
+                          <button 
+                            class="btn-outline px-3 py-2 text-sm"
+                            (click)="viewDetail(loan)"
+                          >
+                            Detail
+                          </button>
+                          @if (canTakeAction(loan)) {
+                            <button 
+                              class="btn-primary px-3 py-2 text-sm"
+                              (click)="takeAction(loan)"
+                            >
+                              {{ getActionLabel(loan) }}
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
           </div>
 
           <!-- Pagination -->
@@ -188,6 +220,7 @@ export class LoanListComponent implements OnInit {
   loans = signal<LoanApplication[]>([]);
   allLoans = signal<LoanApplication[]>([]);
   isLoading = signal(true);
+  isDisbursementMode = signal(false);
 
   currentPage = signal(0);
   totalPages = signal(0);
@@ -219,13 +252,110 @@ export class LoanListComponent implements OnInit {
     this.isLoading.set(true);
 
     if (this.isSuperAdmin()) {
-      this.loadAllLoans();
+      this.loadSuperAdminLoans();
     } else if (this.isMarketing()) {
       this.loadMarketingLoans();
     } else if (this.isBranchManager()) {
       this.loadBranchManagerLoans();
     } else if (this.isBackOffice()) {
       this.loadBackOfficeLoans();
+    }
+  }
+
+  private loadSuperAdminLoans(): void {
+    // Reset disbursement mode (will be set to true only for DISBURSED filter)
+    this.isDisbursementMode.set(false);
+    
+    // Super Admin: use specialized endpoints based on status filter for accurate data
+    if (this.statusFilter === 'SUBMITTED' || this.statusFilter === 'IN_REVIEW') {
+      // Use pending review endpoint
+      this.loanService.getPendingReviewLoans().subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            let loans = response.data;
+            // Filter by specific status if needed
+            if (this.statusFilter) {
+              loans = loans.filter((l: any) => l.status === this.statusFilter);
+            }
+            if (this.searchQuery) {
+              loans = this.applySearchFilter(loans);
+            }
+            this.paginateLoans(loans);
+          }
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Error loading pending reviews:', err);
+          this.loans.set([]);
+          this.isLoading.set(false);
+        }
+      });
+    } else if (this.statusFilter === 'REVIEWED') {
+      // Use pending approval endpoint
+      this.loanService.getPendingApprovalLoans().subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            let loans = response.data;
+            if (this.searchQuery) {
+              loans = this.applySearchFilter(loans);
+            }
+            this.paginateLoans(loans);
+          }
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Error loading pending approvals:', err);
+          this.loans.set([]);
+          this.isLoading.set(false);
+        }
+      });
+    } else if (this.statusFilter === 'APPROVED') {
+      // Use pending disbursement endpoint
+      this.loanService.getPendingDisbursementLoans().subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            let loans = response.data;
+            if (this.searchQuery) {
+              loans = this.applySearchFilter(loans);
+            }
+            this.paginateLoans(loans);
+          }
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Error loading pending disbursements:', err);
+          this.loans.set([]);
+          this.isLoading.set(false);
+        }
+      });
+    } else if (this.statusFilter === 'DISBURSED') {
+      // Use disbursements endpoint for already disbursed loans
+      this.isDisbursementMode.set(true);
+      this.loanService.getDisbursedLoans().subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            let disbursements = response.data as any[];
+            if (this.searchQuery) {
+              // Search by processedByName
+              const query = this.searchQuery.toLowerCase();
+              disbursements = disbursements.filter((d: any) =>
+                d.processedByName?.toLowerCase().includes(query) ||
+                d.loanApplicationId?.toString().includes(query)
+              );
+            }
+            this.paginateDisbursements(disbursements);
+          }
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Error loading disbursed loans:', err);
+          this.loans.set([]);
+          this.isLoading.set(false);
+        }
+      });
+    } else {
+      // Default: load all loans (no filter or REJECTED filter)
+      this.loadAllLoans();
     }
   }
 
@@ -344,6 +474,18 @@ export class LoanListComponent implements OnInit {
     this.totalPages.set(Math.ceil(totalLoans / this.pageSize));
   }
 
+  private paginateDisbursements(disbursements: any[]): void {
+    this.allLoans.set(disbursements);
+    const totalItems = disbursements.length;
+    const startIndex = this.currentPage() * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const paginatedItems = disbursements.slice(startIndex, endIndex);
+
+    this.loans.set(paginatedItems as any);
+    this.totalItems.set(totalItems);
+    this.totalPages.set(Math.ceil(totalItems / this.pageSize));
+  }
+
   onSearch(): void {
     this.currentPage.set(0);
     this.loadLoans();
@@ -433,6 +575,27 @@ export class LoanListComponent implements OnInit {
   getTenorDisplay(loan: any): string {
     const tenor = loan.tenorMonth || loan.tenor || 0;
     return tenor > 0 ? `${tenor} Bulan` : '-';
+  }
+
+  // Disbursement data helpers
+  getDisbursementLoanId(item: any): number {
+    return item.loanApplicationId || item.id || 0;
+  }
+
+  getDisbursementAmount(item: any): number {
+    return item.disbursementAmount || item.amount || 0;
+  }
+
+  getDisbursementDate(item: any): string {
+    return item.disbursementDate || item.createdAt || '';
+  }
+
+  getDisbursementStatus(item: any): string {
+    return item.status || 'COMPLETED';
+  }
+
+  getDisbursementProcessedBy(item: any): string {
+    return item.processedByName || 'N/A';
   }
 
   isSuperAdmin(): boolean {

@@ -198,6 +198,11 @@ export class LoanService {
     return this.http.get<ApiResponse<LoanApplication[]>>(`${environment.apiUrl}/disbursements/pending`);
   }
 
+  // Get already disbursed loans - from /api/disbursements
+  getDisbursedLoans(): Observable<ApiResponse<LoanApplication[]>> {
+    return this.http.get<ApiResponse<LoanApplication[]>>(`${environment.apiUrl}/disbursements`);
+  }
+
   // Get loans for approval (BRANCH_MANAGER) - from /api/approvals/pending
   getLoansForApproval(page: number = 0, size: number = 10): Observable<ApiResponse<PageResponse<LoanApplication>>> {
     // Use the correct endpoint for pending approvals

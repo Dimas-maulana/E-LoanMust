@@ -48,7 +48,7 @@ import { CurrencyPipe } from '../../shared/pipes';
           <!-- Menunggu Review -->
           <div 
             class="stat-card-clickable cursor-pointer"
-            (click)="navigateToLoans('PENDING_REVIEW')"
+            (click)="navigateToLoans('SUBMITTED')"
           >
             <div class="stat-icon-sm bg-amber-500/20 text-amber-400">⏳</div>
             <p class="stat-value-sm">{{ stats()?.pendingReview || 0 }}</p>
