@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://34.88.46.222/api',
+  apiUrl: '/api',
   appName: 'E-Loan Must',
   appVersion: '1.0.0',
   tokenKey: 'eloan_access_token',
