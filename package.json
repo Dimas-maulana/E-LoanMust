@@ -23,6 +23,9 @@
     ]
   },
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "packageManager": "npm@11.7.0",
   "dependencies": {
     "@angular/cdk": "^21.0.6",
